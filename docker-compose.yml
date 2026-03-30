@@ -1,0 +1,15 @@
+# docker-compose.yml
+services:
+  db:
+    image: pgvector/pgvector:pg16   # match your postgres version: pg14, pg15, pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ARCA_2925
+      POSTGRES_DB: ARCA_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:

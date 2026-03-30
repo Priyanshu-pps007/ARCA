@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCA — Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080b10;
+    --bg2:       #0e1117;
+    --bg3:       #141920;
+    --teal:      #00d4aa;
+    --teal-dim:  rgba(0,212,170,0.12);
+    --teal-glow: rgba(0,212,170,0.25);
+    --purple:    #8b6fff;
+    --purple-dim:rgba(139,111,255,0.12);
+    --amber:     #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --coral:     #ff6b6b;
+    --blue:      #4d9fff;
+    --blue-dim:  rgba(77,159,255,0.12);
+    --text:      #e2e8f0;
+    --text-sec:  #7a8899;
+    --text-dim:  #3d4a5c;
+    --border:    rgba(255,255,255,0.06);
+    --border-md: rgba(255,255,255,0.1);
+  }
+
+  html { background: var(--bg); }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 48px 32px 64px;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* dot grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ambient glow blobs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(0,212,170,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-blob-2 {
+    position: fixed;
+    bottom: -20%;
+    right: -10%;
+    width: 50%;
+    height: 50%;
+    background: radial-gradient(ellipse, rgba(139,111,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    margin-bottom: 52px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .logo-block {}
+
+  .logo-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .2em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .logo span {
+    color: var(--teal);
+    text-shadow: 0 0 40px rgba(0,212,170,0.4);
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--text-sec);
+    margin-top: 10px;
+    font-weight: 300;
+    letter-spacing: .04em;
+  }
+
+  .header-meta {
+    text-align: right;
+  }
+
+  .metric-pill {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--teal-dim);
+    border: 1px solid rgba(0,212,170,0.25);
+    border-radius: 12px;
+    padding: 14px 22px;
+  }
+
+  .metric-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--teal);
+    text-shadow: 0 0 20px rgba(0,212,170,0.5);
+  }
+
+  .metric-label {
+    font-size: 10px;
+    color: var(--text-sec);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── ARCHITECTURE LAYERS ── */
+  .arch {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 52px;
+  }
+
+  .layer {
+    border-radius: 14px;
+    border: 1px solid var(--border-md);
+    background: var(--bg2);
+    overflow: hidden;
+    transition: border-color .2s;
+    animation: fadeUp .5s ease both;
+  }
+
+  .layer:hover { border-color: rgba(255,255,255,0.18); }
+
+  .layer:nth-child(1) { animation-delay: .05s; }
+  .layer:nth-child(3) { animation-delay: .1s; }
+  .layer:nth-child(5) { animation-delay: .15s; }
+  .layer:nth-child(7) { animation-delay: .2s; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(16px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .layer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px 13px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .layer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .layer-num {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    color: var(--text-dim);
+  }
+
+  .layer-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+
+  .layer-desc {
+    font-size: 11px;
+    color: var(--text-sec);
+    font-weight: 300;
+    letter-spacing: .04em;
+  }
+
+  .layer-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  /* per-layer accent colors */
+  .layer-interface .layer-name { color: var(--teal); }
+  .layer-interface .layer-header { border-bottom-color: rgba(0,212,170,0.1); }
+  .layer-interface .layer-badge { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(0,212,170,0.2); }
+
+  .layer-builder .layer-name { color: var(--purple); }
+  .layer-builder .layer-header { border-bottom-color: rgba(139,111,255,0.1); }
+  .layer-builder .layer-badge { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(139,111,255,0.2); }
+
+  .layer-runtime .layer-name { color: var(--amber); }
+  .layer-runtime .layer-header { border-bottom-color: rgba(245,166,35,0.1); }
+  .layer-runtime .layer-badge { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+
+  .layer-memory .layer-name { color: var(--blue); }
+  .layer-memory .layer-header { border-bottom-color: rgba(77,159,255,0.1); }
+  .layer-memory .layer-badge { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(77,159,255,0.2); }
+  .layer-memory .layer-badge.moat { background: rgba(245,166,35,0.1); color: var(--amber); border-color: rgba(245,166,35,0.25); }
+
+  .layer-body {
+    padding: 16px 20px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+
+  .layer-interface .chip { background: rgba(0,212,170,0.07); border-color: rgba(0,212,170,0.2); color: #a8ffe8; }
+  .layer-builder   .chip { background: rgba(139,111,255,0.07); border-color: rgba(139,111,255,0.22); color: #cbbfff; }
+  .layer-runtime   .chip { background: rgba(245,166,35,0.07); border-color: rgba(245,166,35,0.22); color: #ffd899; }
+  .layer-memory    .chip { background: rgba(77,159,255,0.07); border-color: rgba(77,159,255,0.22); color: #afd3ff; }
+
+  .chip-sep {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 0 2px;
+  }
+
+  .artifact-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    background: var(--bg3);
+    border: 1px solid var(--border-md);
+    color: var(--text-sec);
+  }
+
+  /* arrow connector between layers */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+    gap: 0;
+    animation: fadeUp .4s ease both;
+  }
+
+  .conn-line {
+    width: 1px;
+    height: 22px;
+    background: linear-gradient(to bottom, var(--border-md), var(--border-md));
+  }
+
+  .conn-arrow {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1;
+  }
+
+  .conn-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: .06em;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* ── TECH STACK GRID ── */
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .2em;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-md);
+  }
+
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 52px;
+  }
+
+  .stack-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color .2s, background .2s;
+  }
+
+  .stack-card:hover {
+    border-color: var(--border-md);
+    background: var(--bg3);
+  }
+
+  .stack-category {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  .stack-items {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .stack-item {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .stack-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* category accent colors */
+  .cat-ai    .stack-category { color: var(--purple); }
+  .cat-ai    .stack-dot      { background: var(--purple); }
+  .cat-be    .stack-category { color: var(--teal); }
+  .cat-be    .stack-dot      { background: var(--teal); }
+  .cat-db    .stack-category { color: var(--blue); }
+  .cat-db    .stack-dot      { background: var(--blue); }
+  .cat-inf   .stack-category { color: var(--amber); }
+  .cat-inf   .stack-dot      { background: var(--amber); }
+  .cat-ml    .stack-category { color: var(--coral); }
+  .cat-ml    .stack-dot      { background: var(--coral); }
+  .cat-fe    .stack-category { color: #a8d8ff; }
+  .cat-fe    .stack-dot      { background: #a8d8ff; }
+
+  /* ── FOOTER ── */
+  .footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .footer-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .footer-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .footer-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .footer-sub {
+    font-size: 11px;
+    color: var(--text-sec);
+    margin-top: 2px;
+    font-weight: 300;
+  }
+
+  .c-teal   { color: var(--teal);   text-shadow: 0 0 20px rgba(0,212,170,0.4); }
+  .c-purple { color: var(--purple); text-shadow: 0 0 20px rgba(139,111,255,0.4); }
+  .c-amber  { color: var(--amber);  text-shadow: 0 0 20px rgba(245,166,35,0.4); }
+
+  /* ── INPUT BOX ── */
+  .input-box {
+    background: var(--bg3);
+    border: 1px solid var(--border-md);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .input-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .input-text {
+    color: var(--teal);
+    font-weight: 400;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--teal);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1.1s step-end infinite;
+    border-radius: 1px;
+    opacity: 0.8;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.8; }
+    50%       { opacity: 0; }
+  }
+
+  /* live output box */
+  .output-box {
+    background: var(--bg3);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--teal);
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+    animation: pulse 1.8s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,170,0.5); }
+    50%       { box-shadow: 0 0 0 6px rgba(0,212,170,0); }
+  }
+</style>
+</head>
+<body>
+<div class="glow-blob-2"></div>
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-block">
+      <div class="logo-eyebrow">System Architecture · v0.1</div>
+      <div class="logo">AR<span>CA</span></div>
+      <div class="tagline">Vercel for AI Agents — Natural language → deployed agent in &lt; 60s</div>
+    </div>
+    <div class="header-meta">
+      <div class="metric-pill">
+        <span class="metric-val">&lt; 60s</span>
+        <span class="metric-label">idea → live agent</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- USER INPUT -->
+  <div class="input-box">
+    <span class="input-label">user</span>
+    <span class="input-text">"build me a lead scraping agent for LinkedIn"<span class="cursor"></span></span>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="arch">
+
+    <!-- CONNECTOR -->
+    <div class="connector">
+      <div class="conn-line"></div>
+      <div class="conn-arrow">↓</div>
+    </div>
+
+    <!-- LAYER 1: INTERFACE -->
+    <div class="layer layer-interface">
+      <div class="layer-header">
+        <div class="layer-left">
+          <span class="layer-num">L1</span>
+          <span class="layer-name">Interface</span>
+          <span class="layer-desc">— entry point</span>
+        </div>
+        <span class="layer-badge">CLI + REST API</span>
+      </div>
+      <div class="layer-body">
+        <span class="chip">agentctl CLI</span>
+        <span class="chip-sep">·</span>
+        <span class="chip">REST API</span>
+        <span class="chip-sep">·</span>
+        <span class="chip">agentctl deploy "..."</span>
+      </div>
+    </div>
+
+    <!-- CONNECTOR -->
+    <div class="connector">
+      <div class="conn-line"></div>
+      <div class="conn-arrow">↓</div>
+      <div class="conn-label">NL prompt</div>
+    </div>
+
+    <!-- LAYER 2: BUILDER -->
+    <div class="layer layer-builder">
+      <div class="layer-header">
+        <div class="layer-left">
+          <span class="layer-num">L2</span>
+          <span class="layer-name">Builder</span>
+          <span class="layer-desc">— NL → config</span>
+        </div>
+        <span class="layer-badge">AI Intelligence</span>
+      </div>
+      <div class="layer-body">
+        <span class="chip">Qwen2.5-Coder-7B</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">QLoRA fine-tune</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">RAG pipeline</span>
+        <span class="chip-sep">→</span>
+        <span class="artifact-tag">agent.json</span>
+      </div>
+    </div>
+
+    <!-- CONNECTOR -->
+    <div class="connector">
+      <div class="conn-line"></div>
+      <div class="conn-arrow">↓</div>
+      <div class="conn-label">agent.json</div>
+    </div>
+
+    <!-- LAYER 3: RUNTIME -->
+    <div class="layer layer-runtime">
+      <div class="layer-header">
+        <div class="layer-left">
+          <span class="layer-num">L3</span>
+          <span class="layer-name">Runtime</span>
+          <span class="layer-desc">— execution engine</span>
+        </div>
+        <span class="layer-badge">Shared Worker Pool</span>
+      </div>
+      <div class="layer-body">
+        <span class="chip">Docker containers</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">Celery workers</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">Redis queue</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">LangGraph executor</span>
+      </div>
+    </div>
+
+    <!-- CONNECTOR -->
+    <div class="connector">
+      <div class="conn-line"></div>
+      <div class="conn-arrow">↕</div>
+      <div class="conn-label">read / write</div>
+    </div>
+
+    <!-- LAYER 4: MEMORY -->
+    <div class="layer layer-memory">
+      <div class="layer-header">
+        <div class="layer-left">
+          <span class="layer-num">L4</span>
+          <span class="layer-name">Memory</span>
+          <span class="layer-desc">— agents get smarter over time</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <span class="layer-badge">Semantic Store</span>
+          <span class="layer-badge moat">★ the moat</span>
+        </div>
+      </div>
+      <div class="layer-body">
+        <span class="chip">PostgreSQL + RLS</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">pgvector</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">Redis cache</span>
+        <span class="chip-sep">+</span>
+        <span class="chip">Semantic retrieval</span>
+      </div>
+    </div>
+
+    <!-- CONNECTOR -->
+    <div class="connector">
+      <div class="conn-line"></div>
+      <div class="conn-arrow">↓</div>
+    </div>
+
+  </div>
+
+  <!-- LIVE OUTPUT -->
+  <div class="output-box">
+    <div class="live-dot"></div>
+    <span>Agent live — streaming results</span>
+  </div>
+
+  <div style="height:48px"></div>
+
+  <!-- TECH STACK -->
+  <div class="section-title">Tech Stack</div>
+  <div class="stack-grid">
+
+    <div class="stack-card cat-ai">
+      <div class="stack-category">AI / LLM</div>
+      <div class="stack-items">
+        <div class="stack-item"><span class="stack-dot"></span>Qwen2.5-Coder-7B</div>
+        <div class="stack-item"><span class="stack-dot"></span>QLoRA (unsloth + trl)</div>
+        <div class="stack-item"><span class="stack-dot"></span>LangChain / LangGraph</div>
+        <div class="stack-item"><span class="stack-dot"></span>RAG + pgvector</div>
+      </div>
+    </div>
+
+    <div class="stack-card cat-be">
+      <div class="stack-category">Backend</div>
+      <div class="stack-items">
+        <div class="stack-item"><span class="stack-dot"></span>FastAPI</div>
+        <div class="stack-item"><span class="stack-dot"></span>Celery (prefork)</div>
+        <div class="stack-item"><span class="stack-dot"></span>Python 3.11+</div>
+        <div class="stack-item"><span class="stack-dot"></span>async / streaming</div>
+      </div>
+    </div>
+
+    <div class="stack-card cat-db">
+      <div class="stack-category">Data Layer</div>
+      <div class="stack-items">
+        <div class="stack-item"><span class="stack-dot"></span>PostgreSQL (RLS)</div>
+        <div class="stack-item"><span class="stack-dot"></span>pgvector</div>
+        <div class="stack-item"><span class="stack-dot"></span>Redis (broker + cache)</div>
+        <div class="stack-item"><span class="stack-dot"></span>SQLAlchemy</div>
+      </div>
+    </div>
+
+    <div class="stack-card cat-inf">
+      <div class="stack-category">Infrastructure</div>
+      <div class="stack-items">
+        <div class="stack-item"><span class="stack-dot"></span>Docker</div>
+        <div class="stack-item"><span class="stack-dot"></span>Hetzner / RunPod</div>
+        <div class="stack-item"><span class="stack-dot"></span>A100 (Builder GPU)</div>
+        <div class="stack-item"><span class="stack-dot"></span>KEDA autoscaling</div>
+      </div>
+    </div>
+
+    <div class="stack-card cat-ml">
+      <div class="stack-category">ML Tooling</div>
+      <div class="stack-items">
+        <div class="stack-item"><span class="stack-dot"></span>HuggingFace TRL</div>
+        <div class="stack-item"><span class="stack-dot"></span>Unsloth (2× VRAM)</div>
+        <div class="stack-item"><span class="stack-dot"></span>vLLM (inference)</div>
+        <div class="stack-item"><span class="stack-dot"></span>JSON Schema validator</div>
+      </div>
+    </div>
+
+    <div class="stack-card cat-fe">
+      <div class="stack-category">Interface</div>
+      <div class="stack-items">
+        <div class="stack-item"><span class="stack-dot"></span>agentctl CLI</div>
+        <div class="stack-item"><span class="stack-dot"></span>REST API</div>
+        <div class="stack-item"><span class="stack-dot"></span>Next.js dashboard</div>
+        <div class="stack-item"><span class="stack-dot"></span>WebSocket streaming</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER METRICS -->
+  <div class="section-title">Business Model</div>
+  <div class="footer">
+    <div class="footer-card">
+      <div class="footer-label">Free tier</div>
+      <div class="footer-val c-teal">$0</div>
+      <div class="footer-sub">2 agents · 30s timeout<br>no memory</div>
+    </div>
+    <div class="footer-card">
+      <div class="footer-label">Pro tier</div>
+      <div class="footer-val c-purple">$20<span style="font-size:14px;font-weight:400;color:var(--text-sec)">/mo</span></div>
+      <div class="footer-sub">20 agents · 5min timeout<br>pgvector memory</div>
+    </div>
+    <div class="footer-card">
+      <div class="footer-label">Teams tier</div>
+      <div class="footer-val c-amber">$99<span style="font-size:14px;font-weight:400;color:var(--text-sec)">/mo</span></div>
+      <div class="footer-sub">Unlimited agents · 30min<br>multi-tenant RLS</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
