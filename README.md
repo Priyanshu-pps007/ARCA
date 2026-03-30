@@ -66,20 +66,20 @@ The key insight: **agents should get smarter with every run, not reset.**
 ARCA is built in 4 layers, each with a single responsibility:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        INTERFACE LAYER                       │
-│              CLI (agentctl)  +  REST API                     │
-├─────────────────────────────────────────────────────────────┤
-│                        BUILDER LAYER                         │
-│     Natural Language → agent.json (Pydantic schema)         │
-│     RAG Pipeline (BGE-M3 + pgvector) + GPT-4o + LangGraph   │
-├─────────────────────────────────────────────────────────────┤
-│                        RUNTIME LAYER                         │
-│         LangGraph Executor + Celery Workers + Docker         │
-├─────────────────────────────────────────────────────────────┤
-│                        MEMORY LAYER                          │
-│    PostgreSQL (state)  +  Redis (cache)  +  pgvector (semantic) │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                        INTERFACE LAYER                        │
+│                  CLI (agentctl)  +  REST API                  │
+├───────────────────────────────────────────────────────────────┤
+│                         BUILDER LAYER                         │
+│        Natural Language → agent.json (Pydantic schema)        │
+│     RAG Pipeline (BGE-M3 + pgvector) + GPT-4o + LangGraph     │
+├───────────────────────────────────────────────────────────────┤
+│                         RUNTIME LAYER                         │
+│         LangGraph Executor + Celery Workers + Docker          │
+├───────────────────────────────────────────────────────────────┤
+│                         MEMORY LAYER                          │
+│  PostgreSQL (state)  +  Redis (cache)  +  pgvector (semantic) │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ### Layer Breakdown
